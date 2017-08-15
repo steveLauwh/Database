@@ -35,3 +35,4 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 
 * [学习 MySQL(一)——语句规范及数据类型](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%B8%80).md)
 * [学习 MySQL(二)——数据表及约束条件](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%BA%8C).md)
+* [学习 MySQL(三)——约束](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%B8%89).md)
