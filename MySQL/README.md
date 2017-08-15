@@ -4,7 +4,7 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 
 数据是以表格的形式出现。一个关系型数据库由一个或数个表格组成，一个表格是由表头，列，行，值，键等组成。
 
-### Windows 下 MySQL服务的命令
+### Windows 下 MySQL 服务的命令
 
 > **启动和关闭 MySQL 服务**
 
@@ -33,5 +33,5 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 
 ### 目录
 
-
-
+* [学习 MySQL(一)——语句规范及数据类型](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%B8%80).md)
+* [学习 MySQL(二)——数据表](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%BA%8C).md)
