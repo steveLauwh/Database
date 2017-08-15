@@ -6,12 +6,32 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 
 ### Windows 下 MySQL服务的命令
 
+> **启动和关闭 MySQL 服务**
+
 * 启动：`net start MySQL`
 * 停止：`net stop MySQL`
 * 卸载：`sc delete MySQL`
 
-MySQL 安装成功后，默认 root 用户密码为空，使用下面命令创建 root 用户的密码为 123456：
+> **MySQL 登录**
 
-`mysqladmin -u root password "123456"`
+| 参数        | 描述   | 
+| --------   | -----:  | 
+| -D     | 打开指定数据库 |  
+| -h        |   服务器名称   | 
+| -p        |    密码    |  
+| -P        |   端口号   | 
+| -u       |    用户名    |
+| -V        |   输出版本信息并且退出   | 
+
+如：MySQL 登录：`mysql -u root -p`
+
+> **MySQL 退出**
+
+* mysql > exit;
+* mysql > quit;
+* mysql > \q;
+
+### 目录
+
 
 
