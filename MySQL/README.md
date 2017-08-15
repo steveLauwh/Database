@@ -23,7 +23,7 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 | -u       |    用户名    |
 | -V        |   输出版本信息并且退出   | 
 
-如：MySQL 登录：`mysql -u root -p`
+如：MySQL 登录：`mysql -u root -p -P 3306`  MySQL 默认的端口号是 3306。
 
 > **MySQL 退出**
 
