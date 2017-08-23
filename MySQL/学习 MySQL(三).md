@@ -34,7 +34,7 @@
 
 ### 添加/删除列
 
-添加单列：`ALTER TABLE table_name ADD column_name INT [FIRST];`
+添加单列：`ALTER TABLE table_name ADD column_name column_definition [FIRST];`
 
 添加多列：`ALTER TABLE table_name ADD (column_name1 column_definitions1, column_name2 column_definitions2...);`
 
@@ -56,5 +56,10 @@
 
 ## 删除约束
 
+删除主键约束：`ALTER TABLE table_name DROP PRIMARY KEY;`
 
+删除唯一约束：`ALTER TABLE table_name DROP {INDEX|KEY} index_name;`
 
+`SHOW INDEXES From table_name\G;`
+
+删除外键约束：`ALTER TABLE table_name DROP FOREIGN KEY fk_symbol`
