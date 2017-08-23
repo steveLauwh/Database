@@ -31,6 +31,10 @@ MySQL 是一个开源的关系型数据库管理系统(Relational Database Manag
 * mysql > quit;
 * mysql > \q;
 
+> **MySQL 安装验证**
+
+* 验证是否成功安装：`mysqladmin --version`
+
 ### 目录
 
 * [学习 MySQL(一)——语句规范及数据类型](https://github.com/steveLauwh/Database/blob/master/MySQL/%E5%AD%A6%E4%B9%A0%20MySQL(%E4%B8%80).md)
