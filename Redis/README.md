@@ -9,5 +9,8 @@ NoSQL(NoSQL = Not Only SQL )，意即"不仅仅是SQL"。
 Redis 是当前比较热门的 NoSQL 系统之一。
 
 
-### Redis 的应用场景
 
+
+### 参考资料
+
+* [Redis 的应用场景](http://blog.csdn.net/hguisu/article/details/8836819)
