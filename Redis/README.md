@@ -75,7 +75,20 @@ redis.conf 配置文件里有详细的参数说明。
 
 在另一台 Linux 访问 Redis 服务器：`$redis-cli -a redis -h XX.XX.XX.XX`。
 
-## 
+## [Redis 命令](https://github.com/steveLauwh/Database/blob/master/Redis/Redis%20%E5%91%BD%E4%BB%A4.md)
+
+Redis 支持五种数据类型：string(字符串)，hash(哈希)，list(列表)，set(集合)，zset(sorted set: 有序集合)。
+
+string 类型是 Redis 最基本的数据类型，一个键最大能存储 512MB。
+
+hash 是一个 string 类型的 field 和 value 的映射表，hash 特别适合用于存储对象。
+
+list 是简单的字符串列表，按照插入顺序排序。可以添加一个元素到列表的头部(左边)或者尾部(右边)。
+
+set 是通过哈希表实现的，所以添加，删除，查找的复杂度都是 O(1)。
+
+zset(sorted set) 与 set 一样也是 string 类型元素的集合，且不允许重复的成员。不同的是每个元素都会关联一个 double 类型的 score。
+Redis 通过 score 来为集合中的成员进行从小到大的排序。
 
 ### 参考资料
 
