@@ -6,8 +6,6 @@ Remote Dictionary Server(Redis) 是一个由 Salvatore Sanfilippo 写的 key-val
 
 Redis 是一个开源的使用 ANSI C 语言编写、遵守 BSD 协议、支持网络、可基于内存亦可持久化的日志型、Key-Value 数据库，并提供多种语言的 API。
 
-NoSQL(NoSQL = Not Only SQL )，意即"不仅仅是 SQL"。
-
 Redis 是当前比较热门的 NoSQL 系统之一。
 
 和 Memcache 一样，Redis 数据都是缓存在计算机内存中，不同的是，Memcache 只能将数据缓存到内存中，无法自动定期写入硬盘，
@@ -89,6 +87,15 @@ set 是通过哈希表实现的，所以添加，删除，查找的复杂度都�
 
 zset(sorted set) 与 set 一样也是 string 类型元素的集合，且不允许重复的成员。不同的是每个元素都会关联一个 double 类型的 score。
 Redis 通过 score 来为集合中的成员进行从小到大的排序。
+
+## Redis 的应用场景
+
+* 缓存
+* 任务队列(秒杀，抢购)
+* 应用排行榜
+* 网站访问统计
+* 数据过期处理(精确毫秒)
+* 分布式集群架构中的 session 分离
 
 ### 参考资料
 
