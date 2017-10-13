@@ -48,7 +48,7 @@ MongoDB 概念：
 
 > document 文档
 
-文档 是一组键值(key-value)对;有序的；区分类型和大小写；不能有重复的键；文档的键是字符串。
+文档 是一组键值(key-value)对；有序的；区分类型和大小写；不能有重复的键；文档的键是字符串。
 
 MongoDB 的文档类似于 RDBMS 的行。
 
@@ -58,7 +58,7 @@ MongoDB 的文档类似于 RDBMS 的行。
 
 集合存在于数据库中，集合没有固定的结构。
 
-capped collections 是固定大小的 collection，单位是字节，其数据存储空间值提前分配的。
+capped collections 是固定大小的 collection；单位是字节；其数据存储空间值提前分配的。
 
 ## 参考资料
 
