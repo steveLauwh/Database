@@ -60,6 +60,8 @@ MongoDB 的文档类似于 RDBMS 的行。
 
 capped collections 是固定大小的 collection；单位是字节；其数据存储空间值提前分配的。
 
+## [MongoDB 特性](https://github.com/steveLauwh/Database/blob/master/MongoDB/MongoDB%20%E7%89%B9%E6%80%A7.md)
+
 ## 参考资料
 
 * https://docs.mongodb.com/manual/
