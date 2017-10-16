@@ -75,6 +75,12 @@ redis.conf 配置文件里有详细的参数说明。
 
 ## [Redis 命令](https://github.com/steveLauwh/Database/blob/master/Redis/Redis%20%E5%91%BD%E4%BB%A4.md)
 
+key 定义的注意点：
+
+* 不要过长
+* 不要过短
+* 统一的命名规范
+
 Redis 支持五种数据类型：string(字符串)，hash(哈希)，list(列表)，set(集合)，zset(sorted set: 有序集合)。
 
 string 类型是 Redis 最基本的数据类型，一个键最大能存储 512MB。
