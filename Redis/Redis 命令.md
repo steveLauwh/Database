@@ -78,6 +78,11 @@ Redis 中集合是通过哈希表实现的，所以添加，删除，查找的�
 
 `SCARD key`：获取集合的成员数。
 
+存储 set 使用场景：
+
+* 跟踪一些唯一性数据
+* 用于维护数据对象之间的关联关系
+
 ### Redis 有序集合(sorted set)
 
 Redis 有序集合和集合一样也是 string 类型元素的集合,且不允许重复的成员。
@@ -93,6 +98,11 @@ Redis 有序集合和集合一样也是 string 类型元素的集合,且不允�
 `ZRANGE key start stop [WITHSCORES]`：通过索引区间返回有序集合成指定区间内的成员。
 
 `ZRANK key member`：返回有序集合中指定成员的索引。
+
+sorted set 使用场景：
+
+* 如大型在线游戏积分排行榜
+* 构建索引数据
 
 ### Redis HyperLogLog(基数统计)
 
