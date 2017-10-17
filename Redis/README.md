@@ -94,6 +94,14 @@ set 是通过哈希表实现的，所以添加，删除，查找的复杂度都�
 zset(sorted set) 与 set 一样也是 string 类型元素的集合，且不允许重复的成员。不同的是每个元素都会关联一个 double 类型的 score。
 Redis 通过 score 来为集合中的成员进行从小到大的排序。
 
+| 数据类型        | 存储的值   |  读写能力  |
+| --------   | -----:  | :----:  |
+| String     | 可以是字符串、整数或浮点 |   对字符串操作，对整数类型加减     |
+| List        |   一个序列集合且每个节点都包好了一个元素   |   序列两端推入、或弹出元素、增删、查找或移除元素   |
+| Set        |    各不相同的元素    |  从集合中插入或则删除元素  |
+| Hash        |   key-value 的散列组，其中 key 是字符串，value 为元素   |   按照 key 进行增加或删除   |
+| Sorted Set        |    带分数的 score-value 有序集合，其中 score 为浮点，value 为元素    |  集合插入，按照分数范围查找  |
+
 ## Redis 的应用场景
 
 * 缓存
@@ -105,4 +113,4 @@ Redis 通过 score 来为集合中的成员进行从小到大的排序。
 
 ### 参考资料
 
-* [Redis 的应用场景](http://blog.csdn.net/hguisu/article/details/8836819)
+* ![Redis 的应用场景](http://blog.csdn.net/hguisu/article/details/8836819)
