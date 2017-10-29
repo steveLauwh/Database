@@ -37,3 +37,5 @@ Using the above tables as example, return the following:
 找没有在 Orders 表中出现的 CustomerId
 
 Not IN 不在范围
+
+AS 重命名表名或列名
