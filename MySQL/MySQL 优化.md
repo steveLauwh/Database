@@ -20,3 +20,11 @@ SQL 及索引的优化，效果最好
 ### 数据库样本
 
 [Example Databases](https://dev.mysql.com/doc/index-other.html)
+
+使用 MySQL 样本数据库 Sakila：
+
+1. 解压 unzip sakila-db.zip，包含 sakila-schema.sql, sakila-data.sql, and sakila.mwb 
+2. 进入 MySQL 后，source sakila-schema.sql(绝对路径)
+3. source sakila-data.sql
+
+### 
