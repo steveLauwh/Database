@@ -25,6 +25,6 @@ SQL 及索引的优化，效果最好
 
 1. 解压 unzip sakila-db.zip，包含 sakila-schema.sql, sakila-data.sql, and sakila.mwb 
 2. 进入 MySQL 后，source sakila-schema.sql(绝对路径)
-3. source sakila-data.sql
+3. 进入 MySQL 后，source sakila-data.sql
 
 ### 
