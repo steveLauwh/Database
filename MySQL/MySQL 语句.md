@@ -118,3 +118,7 @@ source sakila-data.sql // 将数据写入到数据库
 * `SELECT * FROM city WHERE country_id REGEXP '\\.';` // 使用 \\ 为前导，匹配特殊字符，\\. 表示查找.
 
 * `SELECT * FROM city WHERE country_id REGEXP '[a-zA-Z0-9]';`  // 任意字母和数字
+
+* `SELECT Concat(city, ' (', country_id, ')') FROM city ORDER BY city;`  // 拼接两个列
+
+* `SELECT Concat(RTrim(city), ' (', RTrim(country_id), ')') FROM city ORDER BY city;`  // RTrim() 函数去掉值右边的所有空格
