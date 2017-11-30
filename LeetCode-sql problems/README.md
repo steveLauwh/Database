@@ -8,3 +8,5 @@
 * [Rising Temperature](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems/Rising%20Temperature)
 * [Duplicate Emails](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems/Duplicate%20Emails)
 * [Combine Two Tables](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems/Combine%20Two%20Tables)
+* [Swap-Salary](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems/Swap-Salary)
+* [Not Boring Movies](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems/Not%20Boring%20Movies)
