@@ -257,6 +257,16 @@ SELECT customer_id, COUNT(*) AS num FROM payment GROUP BY customer_id HAVING COU
 ```
 
 ```sql
-
+// WHERE 定义联结
+SELECT staff_id, address, phone 
+       FROM staff, address 
+       WHERE staff.address_id = address.address_id 
+       ORDER BY staff_id, address;
 ```
 
+```sql
+// 内部联结
+SELECT staff_id, address, phone 
+       FROM staff INNER JOIN address ON staff.address_id = address.address_id 
+       ORDER BY staff_id, address;
+```
