@@ -270,3 +270,61 @@ SELECT staff_id, address, phone
        FROM staff INNER JOIN address ON staff.address_id = address.address_id 
        ORDER BY staff_id, address;
 ```
+
+```sql
+// LEFT OUTER JOIN...ON 外部联结
+SELECT customer.customer_id, payment.amount 
+       FROM customer LEFT OUTER JOIN payment ON customer.customer_id = payment.customer_id;
+```
+
+```sql
+// RIGHT OUTER JOIN...ON 外部联结
+SELECT customer.customer_id, payment.amount 
+       FROM customer RIGHT OUTER JOIN payment ON customer.customer_id = payment.customer_id;
+```
+
+```sql
+// UNION 组合查询
+SELECT payment_id, customer_id, amount 
+       FROM payment 
+       WHERE amount <= 5 
+UNION 
+SELECT payment_id, customer_id, amount 
+       FROM payment 
+       WHERE amount IN (2.99,3.99);
+```
+
+```sql
+// UNION ALL 组合查询，包含重复的行
+SELECT payment_id, customer_id, amount 
+       FROM payment 
+       WHERE amount <= 5 
+UNION ALL 
+SELECT payment_id, customer_id, amount 
+       FROM payment 
+       WHERE amount IN (2.99,3.99);
+```
+
+```sql
+// 全文本搜索，FULLTEXT
+```
+
+```sql
+// 插入
+INSERT INTO time_zone VALUES(1, 'N');
+
+// 更安全方式
+INSERT INTO time_zone( Time_zone_id, Use_leap_seconds) VALUES(2, 'Y'); 
+```
+
+```sql
+// 更新 UPDATE 表，用 SET 对列重新赋值
+UPDATE time_zone 
+SET Use_leap_seconds = 'N'
+WHERE Time_zone_id = 2;
+```
+
+```sql
+// 删除 DELETE 表的某行
+DELETE FROM time_zone WHERE Time_zone_id = 1;
+```
