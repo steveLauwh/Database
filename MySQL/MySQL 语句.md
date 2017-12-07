@@ -328,3 +328,34 @@ WHERE Time_zone_id = 2;
 // 删除 DELETE 表的某行
 DELETE FROM time_zone WHERE Time_zone_id = 1;
 ```
+
+```sql
+// 创建表
+CREATE TABLE orders 
+( order_num int NOT NULL AUTO_INCREMENT, 
+  order_date datetime NOT NULL,
+  cust_id int NOT NULL,  
+  PRIMARY KEY (order_num)
+)ENGINE=InnoDB;
+```
+
+```sql
+// 更新 orders 表，添加一列
+ALTER TABLE orders ADD order_phone CHAR(20);
+```
+
+```sql
+// 更新 orders 表，删除一列
+ALTER TABLE orders DROP COLUMN order_phone;
+```
+
+```sql
+// 删除表
+DROP TABLE orders;
+```
+
+```sql
+// 重命名表
+RENAME TABLE orders TO orders2；
+```
+
