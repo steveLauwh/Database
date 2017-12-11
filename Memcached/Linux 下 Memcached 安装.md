@@ -1,0 +1,42 @@
+## Linux 下 Memcached 安装
+
+Memcached 是以守护程序方式运行于一个或多个服务器中，随时会接收客户端的连接和操作。
+
+Memcached 主要是基于 libevent 库进行开发的。
+
+**1. 安装 libevent 库**
+
+```
+tar -zxvf libevent-2.1.8-stable.tar.gz
+
+cd libevent-2.1.8-stable
+
+./configure -prefix=/usr/local/memcache/libevent
+
+make && make install
+```
+
+**2. 安装 Memcached**
+
+```
+tar -zxvf memcached-1.5.3.tar.gz
+
+ cd memcached-1.5.3
+ 
+./configure --prefix=/usr/local/memcache/ --with-libevent=/usr/local/memcache/libevent
+
+make && make install
+```
+
+**3. 开启 Memcached**
+
+// 命令帮助
+/usr/local/memcache/bin/memcached -h   
+
+```
+// 后台运行，分配给 Memcached 使用的内存数量为 64M，监听端口为 11211
+/usr/local/memcache/bin/memcached -d -u root -m 64M -p 11211
+
+// 测试
+telnet 127.0.0.1 11211
+```
