@@ -11,4 +11,5 @@ Memcached 是一个开源的软件，高性能的分布式内存缓存系统。
 ## 参考
 
 * [Memcached 全面剖析](memcached を知り尽くす)
-* [Memcached 源代码分析](http://blog.csdn.net/initphp/article/details/43915683)
+* [Memcached 源码分析专栏](http://blog.csdn.net/column/details/memcached-src.html)
+* [Memcached 源码分析系列](http://blog.csdn.net/initphp/article/details/43915683)
