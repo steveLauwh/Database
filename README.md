@@ -50,5 +50,6 @@ NoSQL 数据库类型
 * key-value 存储：如 Redis。可以通过 key 快速查询到其 value。
 * 图形数据库
 
-## [LeetCode-sql problems](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems)
+## LeetCode-SQL problems
 
+[README: SQL Practice]((https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems))
