@@ -6,10 +6,6 @@ Memcached 是一个高性能的分布式内存对象缓存系统，用于动态 
 
 它是基于内存的 key-value 存储，用来存储小块的任意数据（字符串、对象）。这些数据可以是数据库调用、API 调用或者是页面渲染的结果。
 
-## Linux 下安装 Memcached
-
-[README](https://github.com/steveLauwh/Database/blob/master/Memcached/Linux%20%E4%B8%8B%20Memcached%20%E5%AE%89%E8%A3%85.md)
-
 ## Memcached 命令
 
 ### 1. Memcached 存储命令
