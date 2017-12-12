@@ -52,4 +52,4 @@ NoSQL 数据库类型
 
 ## LeetCode-SQL problems
 
-[README: SQL Practice]((https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems))
+[README: SQL Practice](https://github.com/steveLauwh/Database/tree/master/LeetCode-sql%20problems)
