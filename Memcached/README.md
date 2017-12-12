@@ -12,7 +12,7 @@ Memcached 是一个高性能的分布式内存对象缓存系统，用于动态 
 
 ## Memcached 命令
 
-### 1.Memcached 存储命令
+### 1. Memcached 存储命令
 
 > **set**
 
@@ -122,26 +122,26 @@ value
 例如：
 
 ```shell
-set tp 0 900 9
+set cache 0 900 9
 memcached
 STORED
 
-gets tp
-VALUE tp 0 9 1
+gets cache
+VALUE tp 0 9 8
 memcached
 END
 
-cas tp 0 900 5 1
+cas cache 0 900 5 8
 redis
 STORED
 
-get tp
-VALUE tp 0 5
+get cache
+VALUE cache 0 5
 redis
 END
 ```
 
-### 2.Memcached 查找命令
+### 2. Memcached 查找命令
 
 > **get**
 
@@ -229,7 +229,7 @@ VALUE value 0 2
 END
 ```
 
-### 3.Memcached 统计命令
+### 3. Memcached 统计命令
 
 > **stats**
 
