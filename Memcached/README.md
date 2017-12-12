@@ -12,7 +12,7 @@ Memcached 是一个高性能的分布式内存对象缓存系统，用于动态 
 
 ## Memcached 命令
 
-### Memcached 存储命令
+### 1.Memcached 存储命令
 
 > **set**
 
@@ -141,8 +141,120 @@ redis
 END
 ```
 
-### Memcached 查找命令
+### 2.Memcached 查找命令
 
-### Memcached 统计命令
+> **get**
 
+获取存储在 key(键) 中的 value(数据值) ，如果 key 不存在，则返回空。
 
+```shell
+get key
+或
+get key1 key2 key3
+```
+
+> **gets**
+
+获取带有 CAS 令牌存 的 value(数据值) ，如果 key 不存在，则返回空。
+
+在 CAS 操作中，使用 gets 命令可以获得令牌值。
+
+```shell
+gets key
+或
+gets key1 key2 key3
+```
+
+> **delete**
+
+用于删除已存在的 key(键)。
+
+```shell
+delete key [noreply]
+```
+
+例如：
+
+```shell
+set name 0 900 5
+redis
+STORED
+get name
+VALUE name 0 5
+redis
+END
+delete name
+DELETED
+get name
+END
+get name
+END
+delete name
+NOT_FOUND
+```
+
+> **incr 与 decr**
+
+incr 与 decr 命令用于对已存在的 key(键) 的数字值进行自增或自减操作。
+ 
+incr 与 decr 命令操作的数据必须是十进制的32位无符号整数。
+ 
+```shell
+incr key increment_value
+ 
+decr key decrement_value
+```
+ 
+ 例如：
+
+```shell
+set value 0 900 2
+10
+STORED
+get value
+VALUE value 0 2
+10
+END
+incr value 5
+15
+get value
+VALUE value 0 2
+15
+END
+decr value 5
+10
+get value
+VALUE value 0 2
+10
+END
+```
+
+### 3.Memcached 统计命令
+
+> **stats**
+
+用于返回统计信息例如 PID(进程号)、版本号、连接数等。
+
+> **stats items**
+
+用于显示各个 slab 中 item 的数目和存储时长(最后一次访问距离现在的秒数)。
+
+> **stats slabs**
+
+用于显示各个slab的信息，包括chunk的大小、数目、使用情况等。
+
+> **stats sizes**
+
+用于显示所有 item 的大小和个数。
+
+该信息返回两列，第一列是 item 的大小，第二列是 item 的个数。
+
+> **flush_all**
+
+用于清理缓存中的所有 key=>value(键=>值) 对。
+
+该命令提供了一个可选参数 time，用于在制定的时间后执行清理缓存操作。
+
+```shell
+flush_all [time] [noreply]
+```
