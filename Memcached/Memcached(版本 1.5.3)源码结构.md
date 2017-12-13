@@ -1,9 +1,16 @@
 ## Memcached(版本 1.5.3)源码结构
 
+Memcached 采用的是 C-S 架构，客户端不是"用户客户端"，而是能够处理用户请求并进行分布式处理的"中间服务器"。
+
+客户端和服务器端采用 socket 通信，Memcached 服务器的主要工作就是处理客户端的命令请求，采用 master-worker 模式的多线程机制，主线程
+和 工作线程采用管道通信，主线程负责监听事件请求，然后通过管道分发给不同的工作线程，工作线程根据主线程提供的相应信息，与 socket 端建立真正的连接，
+进行数据接收和处理。
+
 以下是 Memcached 源码(版本 1.5.3) 的结构预览：
 
+```
 ├── aclocal.m4
-├── assoc.c
+├── assoc.c   // Hash 表的管理
 ├── assoc.h
 ├── AUTHORS
 ├── bipbuffer.c
@@ -32,7 +39,7 @@
 │   ├── new_lru.txt
 │   ├── protocol-binary-range.xml
 │   ├── protocol-binary.xml
-│   ├── protocol.txt
+│   ├── protocol.txt    // 帮助文档，参数解释
 │   ├── readme.txt
 │   ├── threads.txt
 │   └── xml2rfc
@@ -43,10 +50,10 @@
 │       ├── rfc2629-other.ent
 │       ├── rfc2629-refchk.xsl
 │       └── rfc2629-xhtml.ent
-├── hash.c
+├── hash.c    // hash 算法
 ├── hash.h
 ├── install-sh
-├── items.c
+├── items.c   // 服务器端 item 对象管理
 ├── items.h
 ├── itoa_ljust.c
 ├── itoa_ljust.h
@@ -60,7 +67,7 @@
 │   └── c99-backport.m4
 ├── Makefile.am
 ├── Makefile.in
-├── memcached.c
+├── memcached.c  // 主函数及控制逻辑
 ├── memcached_dtrace.d
 ├── memcached.h
 ├── memcached.spec
@@ -89,10 +96,10 @@
 ├── sizes.c
 ├── slab_automove.c
 ├── slab_automove.h
-├── slabs.c
+├── slabs.c    // 服务器端内存对象管理
 ├── slabs.h
 ├── solaris_priv.c
-├── stats.c
+├── stats.c    // 数据统计
 ├── stats.h
 ├── t
 │   ├── 00-startup.t
@@ -164,9 +171,10 @@
 │   ├── watcher.t
 │   └── whitespace.t
 ├── testapp.c
-├── thread.c
+├── thread.c   // 线程机制
 ├── timedrun.c
 ├── trace.h
 ├── util.c
 ├── util.h
 └── version.m4
+```
