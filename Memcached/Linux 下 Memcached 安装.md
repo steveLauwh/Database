@@ -40,3 +40,14 @@ make && make install
 // 测试
 telnet 127.0.0.1 11211
 ```
+
+为了方便在 Shell 中启动 Memcached，把 Memcached 可执行文件目录添加到环境配置中
+
+```shell
+// Memcached 可执行文件在 /usr/local/memcache/bin 目录下
+// 然后在 /etc/bash.bashrc 文件最后添加
+exportPATH=$PATH:/usr/local/memcache/bin
+
+// man 查询 Memcached 的帮助手册
+cp /usr/local/memcache/share/man/man1/memcached.1 /usr/local/share/man/man1
+```
