@@ -27,4 +27,6 @@ SQL 及索引的优化，效果最好
 2. 进入 MySQL 后，source sakila-schema.sql(绝对路径)
 3. 进入 MySQL 后，source sakila-data.sql
 
-### 
+### MySQL 性能优化
+
+![](https://github.com/steveLauwh/Database/raw/master/image/MySQL性能优化.PNG)
