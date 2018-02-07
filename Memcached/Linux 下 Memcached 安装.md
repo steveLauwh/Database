@@ -18,6 +18,8 @@ make && make install
 
 **2. 安装 Memcached**
 
+--with-libevent: 指定 libevent 的安装目录，--prefix:指定安装的路径。
+
 ```
 tar -zxvf memcached-1.5.3.tar.gz
 
@@ -30,8 +32,8 @@ make && make install
 
 **3. 开启 Memcached**
 
-// 命令帮助
-/usr/local/memcache/bin/memcached -h   
+// 命令帮助，查看启动参数
+/usr/local/memcache/bin/memcached -h   
 
 ```
 // 后台运行，分配给 Memcached 使用的内存数量为 64M，监听端口为 11211
@@ -50,4 +52,12 @@ exportPATH=$PATH:/usr/local/memcache/bin
 
 // man 查询 Memcached 的帮助手册
 cp /usr/local/memcache/share/man/man1/memcached.1 /usr/local/share/man/man1
+```
+
+**4. 关闭 Memcached**
+
+```
+ps -ef|grep memcached
+
+kill -9 pid
 ```
