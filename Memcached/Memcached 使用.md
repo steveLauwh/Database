@@ -254,3 +254,9 @@ END
 ```shell
 flush_all [time] [noreply]
 ```
+
+> 退出 
+
+quit
+
+
