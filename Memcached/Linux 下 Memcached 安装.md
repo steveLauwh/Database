@@ -18,7 +18,7 @@ make && make install
 
 **2. 安装 Memcached**
 
---with-libevent: 指定 libevent 的安装目录，--prefix:指定安装的路径。
+--with-libevent: 指定 libevent 的安装目录，--prefix: 指定安装的路径。
 
 ```
 tar -zxvf memcached-1.5.3.tar.gz
