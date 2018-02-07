@@ -13,6 +13,7 @@
  *      Anatoly Vorobey <mellon@pobox.com>
  *      Brad Fitzpatrick <brad@danga.com>
  */
+/* 主函数 */
 #include "memcached.h"
 #ifdef EXTSTORE
 #include "storage.h"
@@ -219,36 +220,36 @@ static void stats_reset(void) {
 }
 
 static void settings_init(void) {
-    settings.use_cas = true;
-    settings.access = 0700;
-    settings.port = 11211;
-    settings.udpport = 11211;
+    settings.use_cas = true;   //  开启CAS
+    settings.access = 0700;    //  UNIX socket 的权限位信息
+    settings.port = 11211;     // 监听tcp 端口
+    settings.udpport = 11211;  // 监听udp端口
     /* By default this string should be NULL for getaddrinfo() */
-    settings.inter = NULL;
-    settings.maxbytes = 64 * 1024 * 1024; /* default is 64MB */
-    settings.maxconns = 1024;         /* to limit connections-related memory to about 5MB */
-    settings.verbose = 0;
-    settings.oldest_live = 0;
+    settings.inter = NULL;     // 绑定的IP地址,如果该值为NULL，那么就是INADDR_ANY
+    settings.maxbytes = 64 * 1024 * 1024; /* default is 64MB */  // 最大使用的内存
+    settings.maxconns = 1024;         /* to limit connections-related memory to about 5MB */ // 最大允许客户端在线
+    settings.verbose = 0;       // 运行信息的输出级别，值越大，输出越详细
+    settings.oldest_live = 0;   // flush_all 命令时间界限
     settings.oldest_cas = 0;          /* supplements accuracy of oldest_live */
-    settings.evict_to_free = 1;       /* push old items out of cache when memory runs out */
+    settings.evict_to_free = 1;       /* push old items out of cache when memory runs out */  // 是否允许LRU 淘汰机制
     settings.socketpath = NULL;       /* by default, not using a unix socket */
-    settings.factor = 1.25;
-    settings.chunk_size = 48;         /* space for a modest key and value */
-    settings.num_threads = 4;         /* N workers */
-    settings.num_threads_per_udp = 0;
-    settings.prefix_delimiter = ':';
-    settings.detail_enabled = 0;
-    settings.reqs_per_event = 20;
-    settings.backlog = 1024;
-    settings.binding_protocol = negotiating_prot;
-    settings.item_size_max = 1024 * 1024; /* The famous 1MB upper limit. */
-    settings.slab_page_size = 1024 * 1024; /* chunks are split from 1MB pages. */
+    settings.factor = 1.25;     // item 的扩容因子
+    settings.chunk_size = 48;         /* space for a modest key and value */  // 最小的一个item能存储多少字节数据
+    settings.num_threads = 4;         /* N workers */  // worker 线程的个数
+    settings.num_threads_per_udp = 0;  // 多少个worker 线程为一个udp socket 服务
+    settings.prefix_delimiter = ':';   // 分隔符
+    settings.detail_enabled = 0;       // 是否自动收集状态信息 
+    settings.reqs_per_event = 20;      // worker线程连续为某个客户端执行命令的最大命令数
+    settings.backlog = 1024;           // listen 函数的第二个参数
+    settings.binding_protocol = negotiating_prot; // 此为协商，用户命令的协议: 文件和二进制两种
+    settings.item_size_max = 1024 * 1024; /* The famous 1MB upper limit. */ 
+    settings.slab_page_size = 1024 * 1024; /* chunks are split from 1MB pages. */ // slab 内存页的大小，单位字节
     settings.slab_chunk_size_max = settings.slab_page_size / 2;
     settings.sasl = false;
-    settings.maxconns_fast = true;
-    settings.lru_crawler = false;
-    settings.lru_crawler_sleep = 100;
-    settings.lru_crawler_tocrawl = 0;
+    settings.maxconns_fast = true;  // 如果连接数超过了最大同时在线数，是否立即关闭新连接上的客户
+    settings.lru_crawler = false;  // 是否启动LRU 爬虫线程
+    settings.lru_crawler_sleep = 100; // LRU 爬虫线程工作时的休眠间隔，单位us
+    settings.lru_crawler_tocrawl = 0; // LRU 爬虫检查每条LRU 队列中多少个item  
     settings.lru_maintainer_thread = false;
     settings.lru_segmented = true;
     settings.hot_lru_pct = 20;
@@ -259,14 +260,14 @@ static void settings_init(void) {
     settings.temp_lru = false;
     settings.temporary_ttl = 61;
     settings.idle_timeout = 0; /* disabled */
-    settings.hashpower_init = 0;
+    settings.hashpower_init = 0;  // 哈希表的长度是2^n 
     settings.slab_reassign = true;
     settings.slab_automove = 1;
     settings.slab_automove_ratio = 0.8;
     settings.slab_automove_window = 30;
-    settings.shutdown_command = false;
+    settings.shutdown_command = false; // 是否支持客户端的关闭命令
     settings.tail_repair_time = TAIL_REPAIR_TIME_DEFAULT;
-    settings.flush_enabled = true;
+    settings.flush_enabled = true; // 是否允许客户端使用flush_all 命令
     settings.dump_enabled = true;
     settings.crawls_persleep = 1000;
     settings.logger_watcher_buf_size = LOGGER_WATCHER_BUF_SIZE;
