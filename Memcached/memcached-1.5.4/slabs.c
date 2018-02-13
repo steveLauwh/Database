@@ -23,7 +23,7 @@
 
 //#define DEBUG_SLAB_MOVER
 /* powers-of-N allocation structures */
-
+/* N 阶Slabs(大块) 内存分配结构体*/
 typedef struct {
     unsigned int size;      /* sizes of items */
     unsigned int perslab;   /* how many items per slab */
@@ -39,6 +39,7 @@ typedef struct {
     size_t requested; /* The number of requested bytes */
 } slabclass_t;
 
+// slab class 最大64 个
 static slabclass_t slabclass[MAX_NUMBER_OF_SLAB_CLASSES];
 static size_t mem_limit = 0;
 static size_t mem_malloced = 0;
@@ -50,9 +51,7 @@ static int power_largest;
 static void *mem_base = NULL;
 static void *mem_current = NULL;
 static size_t mem_avail = 0;
-#ifdef EXTSTORE
-static void *storage  = NULL;
-#endif
+
 /**
  * Access to the slab allocator is protected by this lock
  */
@@ -62,7 +61,6 @@ static pthread_mutex_t slabs_rebalance_lock = PTHREAD_MUTEX_INITIALIZER;
 /*
  * Forward Declarations
  */
-static int grow_slab_list (const unsigned int id);
 static int do_slabs_newslab(const unsigned int id);
 static void *memory_allocate(size_t size);
 static void do_slabs_free(void *ptr, const size_t size, unsigned int id);
@@ -74,11 +72,7 @@ static void do_slabs_free(void *ptr, const size_t size, unsigned int id);
    slab types can be made.  if max memory is less than 18 MB, only the
    smaller ones will be made.  */
 static void slabs_preallocate (const unsigned int maxslabs);
-#ifdef EXTSTORE
-void slabs_set_storage(void *arg) {
-    storage = arg;
-}
-#endif
+
 /*
  * Figures out which slab class (chunk size) is required to store an item of
  * a given size.
@@ -102,12 +96,16 @@ unsigned int slabs_clsid(const size_t size) {
  * Determines the chunk sizes and initializes the slab class descriptors
  * accordingly.
  */
+/******************************************************************
+  * 函数功能:  Slabs 初始化
+  ******************************************************************/
 void slabs_init(const size_t limit, const double factor, const bool prealloc, const uint32_t *slab_sizes) {
     int i = POWER_SMALLEST - 1;
     unsigned int size = sizeof(item) + settings.chunk_size;
 
     mem_limit = limit;
 
+	// prealloc 默认为0
     if (prealloc) {
         /* Allocate everything in a big chunk with malloc */
         mem_base = malloc(mem_limit);
@@ -166,19 +164,6 @@ void slabs_init(const size_t limit, const double factor, const bool prealloc, co
     }
 }
 
-void slabs_prefill_global(void) {
-    void *ptr;
-    slabclass_t *p = &slabclass[0];
-    int len = settings.slab_page_size;
-
-    while (mem_malloced < mem_limit
-            && (ptr = memory_allocate(len)) != NULL) {
-        grow_slab_list(0);
-        p->slab_list[p->slabs++] = ptr;
-    }
-    mem_limit_reached = true;
-}
-
 static void slabs_preallocate (const unsigned int maxslabs) {
     int i;
     unsigned int prealloc = 0;
@@ -199,6 +184,7 @@ static void slabs_preallocate (const unsigned int maxslabs) {
             exit(1);
         }
     }
+
 }
 
 static int grow_slab_list (const unsigned int id) {
@@ -379,9 +365,6 @@ static void do_slabs_free(void *ptr, const size_t size, unsigned int id) {
 
     it = (item *)ptr;
     if ((it->it_flags & ITEM_CHUNKED) == 0) {
-#ifdef EXTSTORE
-        bool is_hdr = it->it_flags & ITEM_HDR;
-#endif
         it->it_flags = ITEM_SLABBED;
         it->slabs_clsid = 0;
         it->prev = 0;
@@ -390,15 +373,7 @@ static void do_slabs_free(void *ptr, const size_t size, unsigned int id) {
         p->slots = it;
 
         p->sl_curr++;
-#ifdef EXTSTORE
-        if (!is_hdr) {
-            p->requested -= size;
-        } else {
-            p->requested -= (size - it->nbytes) + sizeof(item_hdr);
-        }
-#else
         p->requested -= size;
-#endif
     } else {
         do_slabs_free_chunked(it, size);
     }
@@ -417,22 +392,8 @@ void fill_slab_stats_automove(slab_stats_automove *am) {
         cur->chunks_per_page = p->perslab;
         cur->free_chunks = p->sl_curr;
         cur->total_pages = p->slabs;
-        cur->chunk_size = p->size;
     }
     pthread_mutex_unlock(&slabs_lock);
-}
-
-/* TODO: slabs_available_chunks should grow up to encompass this.
- * mem_flag is redundant with the other function.
- */
-unsigned int global_page_pool_size(bool *mem_flag) {
-    unsigned int ret = 0;
-    pthread_mutex_lock(&slabs_lock);
-    if (mem_flag != NULL)
-        *mem_flag = mem_malloced >= mem_limit ? true : false;
-    ret = slabclass[SLAB_GLOBAL_PAGE_POOL].slabs;
-    pthread_mutex_unlock(&slabs_lock);
-    return ret;
 }
 
 static int nz_strcmp(int nzlength, const char *nz, const char *z) {
@@ -451,9 +412,11 @@ bool get_stats(const char *stat_type, int nkey, ADD_STAT add_stats, void *c) {
             APPEND_STAT("curr_items", "%llu", (unsigned long long)stats_state.curr_items);
             APPEND_STAT("total_items", "%llu", (unsigned long long)stats.total_items);
             STATS_UNLOCK();
-            pthread_mutex_lock(&slabs_lock);
-            APPEND_STAT("slab_global_page_pool", "%u", slabclass[SLAB_GLOBAL_PAGE_POOL].slabs);
-            pthread_mutex_unlock(&slabs_lock);
+            if (settings.slab_automove > 0) {
+                pthread_mutex_lock(&slabs_lock);
+                APPEND_STAT("slab_global_page_pool", "%u", slabclass[SLAB_GLOBAL_PAGE_POOL].slabs);
+                pthread_mutex_unlock(&slabs_lock);
+            }
             item_stats_totals(add_stats, c);
         } else if (nz_strcmp(nkey, stat_type, "items") == 0) {
             item_stats(add_stats, c);
@@ -642,7 +605,7 @@ unsigned int slabs_available_chunks(const unsigned int id, bool *mem_flag,
     p = &slabclass[id];
     ret = p->sl_curr;
     if (mem_flag != NULL)
-        *mem_flag = mem_malloced >= mem_limit ? true : false;
+        *mem_flag = mem_limit_reached;
     if (total_bytes != NULL)
         *total_bytes = p->requested;
     if (chunks_perslab != NULL)
@@ -861,7 +824,6 @@ static int slab_rebalance_move(void) {
                             slab_rebal.busy_deletes++;
                             // Only safe to hold slabs lock because refcount
                             // can't drop to 0 until we release item lock.
-                            STORAGE_delete(storage, it);
                             do_item_unlink(it, hv);
                         }
                         status = MOVE_BUSY;
@@ -898,11 +860,6 @@ static int slab_rebalance_move(void) {
                  */
                 /* Check if expired or flushed */
                 ntotal = ITEM_ntotal(it);
-#ifdef EXTSTORE
-                if (it->it_flags & ITEM_HDR) {
-                    ntotal = (ntotal - it->nbytes) + sizeof(item_hdr);
-                }
-#endif
                 /* REQUIRES slabs_lock: CHECK FOR cls->sl_curr > 0 */
                 if (ch == NULL && (it->it_flags & ITEM_CHUNKED)) {
                     /* Chunked should be identical to non-chunked, except we need
@@ -976,7 +933,6 @@ static int slab_rebalance_move(void) {
                 } else {
                     /* restore ntotal in case we tried saving a head chunk. */
                     ntotal = ITEM_ntotal(it);
-                    STORAGE_delete(storage, it);
                     do_item_unlink(it, hv);
                     slabs_free(it, ntotal, slab_rebal.s_clsid);
                     /* Swing around again later to remove it from the freelist. */
@@ -1076,7 +1032,6 @@ static void slab_rebalance_finish(void) {
             slab_rebal.d_clsid);
     } else if (slab_rebal.d_clsid == SLAB_GLOBAL_PAGE_POOL) {
         /* mem_malloc'ed might be higher than mem_limit. */
-        mem_limit_reached = false;
         memory_release();
     }
 
