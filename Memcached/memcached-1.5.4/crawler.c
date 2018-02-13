@@ -68,13 +68,12 @@ crawler_module_reg_t crawler_expired_mod = {
 };
 
 static void crawler_metadump_eval(crawler_module_t *cm, item *search, uint32_t hv, int i);
-static void crawler_metadump_finalize(crawler_module_t *cm);
 
 crawler_module_reg_t crawler_metadump_mod = {
     .init = NULL,
     .eval = crawler_metadump_eval,
     .doneclass = NULL,
-    .finalize = crawler_metadump_finalize,
+    .finalize = NULL,
     .needs_lock = false,
     .needs_client = true
 };
@@ -85,7 +84,6 @@ crawler_module_reg_t *crawler_mod_regs[3] = {
     &crawler_metadump_mod
 };
 
-static int lru_crawler_client_getbuf(crawler_client_t *c);
 crawler_module_t active_crawler_mod;
 enum crawler_run_type active_crawler_type;
 
@@ -96,10 +94,6 @@ static volatile int do_run_lru_crawler_thread = 0;
 static int lru_crawler_initialized = 0;
 static pthread_mutex_t lru_crawler_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  lru_crawler_cond = PTHREAD_COND_INITIALIZER;
-#ifdef EXTSTORE
-/* TODO: pass this around */
-static void *storage;
-#endif
 
 /* Will crawl all slab classes a minimum of once per hour */
 #define MAX_MAINTCRAWL_WAIT 60 * 60
@@ -183,20 +177,8 @@ static void crawler_expired_eval(crawler_module_t *cm, item *search, uint32_t hv
     pthread_mutex_lock(&d->lock);
     crawlerstats_t *s = &d->crawlerstats[i];
     int is_flushed = item_is_flushed(search);
-#ifdef EXTSTORE
-    bool is_valid = true;
-    if (search->it_flags & ITEM_HDR) {
-        item_hdr *hdr = (item_hdr *)ITEM_data(search);
-        if (extstore_check(storage, hdr->page_id, hdr->page_version) != 0)
-            is_valid = false;
-    }
-#endif
     if ((search->exptime != 0 && search->exptime < current_time)
-        || is_flushed
-#ifdef EXTSTORE
-        || !is_valid
-#endif
-        ) {
+        || is_flushed) {
         crawlers[i].reclaimed++;
         s->reclaimed++;
 
@@ -213,9 +195,6 @@ static void crawler_expired_eval(crawler_module_t *cm, item *search, uint32_t hv
         if ((search->it_flags & ITEM_FETCHED) == 0 && !is_flushed) {
             crawlers[i].unfetched++;
         }
-#ifdef EXTSTORE
-        STORAGE_delete(storage, search);
-#endif
         do_item_unlink_nolock(search, hv);
         do_item_remove(search);
         assert(search->slabs_clsid == 0);
@@ -250,14 +229,12 @@ static void crawler_metadump_eval(crawler_module_t *cm, item *it, uint32_t hv, i
     // TODO: uriencode directly into the buffer.
     uriencode(ITEM_key(it), keybuf, it->nkey, KEY_MAX_LENGTH * 3 + 1);
     int total = snprintf(cm->c.cbuf, 4096,
-            "key=%s exp=%ld la=%llu cas=%llu fetch=%s cls=%u size=%lu\n",
+            "key=%s exp=%ld la=%llu cas=%llu fetch=%s\n",
             keybuf,
             (it->exptime == 0) ? -1 : (long)it->exptime + process_started,
             (unsigned long long)it->time + process_started,
             (unsigned long long)ITEM_get_cas(it),
-            (it->it_flags & ITEM_FETCHED) ? "yes" : "no",
-            ITEM_clsid(it),
-            (unsigned long) ITEM_ntotal(it));
+            (it->it_flags & ITEM_FETCHED) ? "yes" : "no");
     refcount_decr(it);
     // TODO: some way of tracking the errors. these are very unlikely though.
     if (total >= LRU_CRAWLER_WRITEBUF - 1 || total <= 0) {
@@ -265,15 +242,6 @@ static void crawler_metadump_eval(crawler_module_t *cm, item *it, uint32_t hv, i
         return;
     }
     bipbuf_push(cm->c.buf, total);
-}
-
-static void crawler_metadump_finalize(crawler_module_t *cm) {
-    if (cm->c.c != NULL) {
-        // Ensure space for final message.
-        lru_crawler_client_getbuf(&cm->c);
-        memcpy(cm->c.cbuf, "END\r\n", 5);
-        bipbuf_push(cm->c.buf, 5);
-    }
 }
 
 static int lru_crawler_poll(crawler_client_t *c) {
@@ -673,11 +641,11 @@ void lru_crawler_resume(void) {
     pthread_mutex_unlock(&lru_crawler_lock);
 }
 
+// LRU 爬虫初始化
+// 条件变量初始化，lru_crawler_cond
+// 互斥锁初始化，lru_crawler_lock
 int init_lru_crawler(void *arg) {
     if (lru_crawler_initialized == 0) {
-#ifdef EXTSTORE
-        storage = arg;
-#endif
         if (pthread_cond_init(&lru_crawler_cond, NULL) != 0) {
             fprintf(stderr, "Can't initialize lru crawler condition\n");
             return -1;
