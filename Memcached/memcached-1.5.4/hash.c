@@ -4,6 +4,7 @@
 #include "jenkins_hash.h"
 #include "murmur3_hash.h"
 
+// 选用hash 算法
 int hash_init(enum hashfunc_type type) {
     switch(type) {
         case JENKINS_HASH:
