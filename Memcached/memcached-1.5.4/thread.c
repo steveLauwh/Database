@@ -3,9 +3,6 @@
  * Thread management for memcached.
  */
 #include "memcached.h"
-#ifdef EXTSTORE
-#include "storage.h"
-#endif
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
@@ -24,28 +21,31 @@ enum conn_queue_item_modes {
     queue_new_conn,   /* brand new connection. */
     queue_redispatch, /* redispatching from side thread */
 };
-typedef struct conn_queue_item CQ_ITEM;
+
+// 客户端的信息封装成一个CQ_ITEM
+typedef struct conn_queue_item CQ_ITEM;  // 存储用户socket 连接信息
 struct conn_queue_item {
-    int               sfd;
-    enum conn_states  init_state;
-    int               event_flags;
-    int               read_buffer_size;
-    enum network_transport     transport;
-    enum conn_queue_item_modes mode;
-    conn *c;
-    CQ_ITEM          *next;
+    int               sfd;  // socket fd
+    enum conn_states  init_state; // 连接类型
+    int               event_flags; // libevent flags
+    int               read_buffer_size; // 读取buffer 的size
+    enum network_transport     transport; // 端口号
+    enum conn_queue_item_modes mode; // item mode
+    conn *c;      // 连接结构体
+    CQ_ITEM          *next;  // 下一个item
 };
 
 /* A connection queue. */
-typedef struct conn_queue CQ;
+// 每个worker 线程都有一个CQ 队列
+typedef struct conn_queue CQ;  // 每个线程的处理队列结构
 struct conn_queue {
-    CQ_ITEM *head;
-    CQ_ITEM *tail;
-    pthread_mutex_t lock;
+    CQ_ITEM *head; // 指向队列的第一个节点
+    CQ_ITEM *tail; // 指向队列的最后一个节点
+    pthread_mutex_t lock;  // 一个队列对应互斥锁
 };
 
 /* Locks for cache LRU operations */
-pthread_mutex_t lru_locks[POWER_LARGEST];
+pthread_mutex_t lru_locks[POWER_LARGEST];  // 缓存LRU 操作的锁
 
 /* Connection lock around accepting new connections */
 pthread_mutex_t conn_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -75,6 +75,7 @@ unsigned int item_lock_hashpower;
  * Each libevent instance has a wakeup pipe, which other threads
  * can use to signal that they've put a new connection on its queue.
  */
+// 定义一个全局变量指针threads，主线程通过该指针访问每一个worker 线程
 static LIBEVENT_THREAD *threads;
 
 /*
@@ -124,7 +125,7 @@ static void wait_for_thread_registration(int nthreads) {
 static void register_thread_initialized(void) {
     pthread_mutex_lock(&init_lock);
     init_count++;
-    pthread_cond_signal(&init_cond);
+    pthread_cond_signal(&init_cond); // 发送一个信号 给另一个阻塞线程，使其脱离阻塞状态
     pthread_mutex_unlock(&init_lock);
     /* Force worker threads to pile up if someone wants us to */
     pthread_mutex_lock(&worker_hang_lock);
@@ -142,9 +143,6 @@ void pause_threads(enum pause_thread_types type) {
             lru_maintainer_pause();
             slabs_rebalancer_pause();
             lru_crawler_pause();
-#ifdef EXTSTORE
-            storage_compact_pause();
-#endif
         case PAUSE_WORKER_THREADS:
             buf[0] = 'p';
             pthread_mutex_lock(&worker_hang_lock);
@@ -153,9 +151,6 @@ void pause_threads(enum pause_thread_types type) {
             lru_maintainer_resume();
             slabs_rebalancer_resume();
             lru_crawler_resume();
-#ifdef EXTSTORE
-            storage_compact_resume();
-#endif
         case RESUME_WORKER_THREADS:
             pthread_mutex_unlock(&worker_hang_lock);
             break;
@@ -185,6 +180,9 @@ void pause_threads(enum pause_thread_types type) {
 /*
  * Initializes a connection queue.
  */
+/******************************************************************
+  * 函数功能:  初始化CQ 队列，其实就是单链表
+  ******************************************************************/
 static void cq_init(CQ *cq) {
     pthread_mutex_init(&cq->lock, NULL);
     cq->head = NULL;
@@ -196,9 +194,13 @@ static void cq_init(CQ *cq) {
  * one.
  * Returns the item, or NULL if no item is available
  */
+/******************************************************************
+  * 函数功能:  从worker 线程的CQ 队列里pop 一个CQ_ITEM，队列头弹出
+  ******************************************************************/
 static CQ_ITEM *cq_pop(CQ *cq) {
     CQ_ITEM *item;
 
+	// 单链表，取出链表头部
     pthread_mutex_lock(&cq->lock);
     item = cq->head;
     if (NULL != item) {
@@ -214,9 +216,13 @@ static CQ_ITEM *cq_pop(CQ *cq) {
 /*
  * Adds an item to a connection queue.
  */
+/******************************************************************
+  * 函数功能:  向worker 线程的CQ 队列里push 一个CQ_ITEM
+  ******************************************************************/
 static void cq_push(CQ *cq, CQ_ITEM *item) {
     item->next = NULL;
 
+	// push 前先加锁
     pthread_mutex_lock(&cq->lock);
     if (NULL == cq->tail)
         cq->head = item;
@@ -229,8 +235,12 @@ static void cq_push(CQ *cq, CQ_ITEM *item) {
 /*
  * Returns a fresh connection queue item.
  */
+/******************************************************************
+  * 函数功能: 预分配一块比较大的内存，将这块大内存切分成多个CQ_ITEM
+  ******************************************************************/
 static CQ_ITEM *cqi_new(void) {
     CQ_ITEM *item = NULL;
+	// 所有线程都要访问cqi_freelist ，需加锁
     pthread_mutex_lock(&cqi_freelist_lock);
     if (cqi_freelist) {
         item = cqi_freelist;
@@ -255,11 +265,12 @@ static CQ_ITEM *cqi_new(void) {
          * (which we'll return to the caller) for placement on
          * the freelist.
          */
+        // 将这块内存分成一个个item，并且用next指针像链表一样连接
         for (i = 2; i < ITEMS_PER_ALLOC; i++)
             item[i - 1].next = &item[i];
 
         pthread_mutex_lock(&cqi_freelist_lock);
-        item[ITEMS_PER_ALLOC - 1].next = cqi_freelist;
+        item[ITEMS_PER_ALLOC - 1].next = cqi_freelist; //头插法
         cqi_freelist = &item[1];
         pthread_mutex_unlock(&cqi_freelist_lock);
     }
@@ -270,7 +281,10 @@ static CQ_ITEM *cqi_new(void) {
 
 /*
  * Frees a connection queue item (adds it to the freelist.)
- */
+*/
+/******************************************************************
+  * 函数功能:头插法 归还
+******************************************************************/
 static void cqi_free(CQ_ITEM *item) {
     pthread_mutex_lock(&cqi_freelist_lock);
     item->next = cqi_freelist;
@@ -282,12 +296,16 @@ static void cqi_free(CQ_ITEM *item) {
 /*
  * Creates a worker thread.
  */
+/******************************************************************
+  * 函数功能:真正调用pthread_create 创建线程
+******************************************************************/
 static void create_worker(void *(*func)(void *), void *arg) {
     pthread_attr_t  attr;
     int             ret;
 
     pthread_attr_init(&attr);
 
+	// 创建工作线程
     if ((ret = pthread_create(&((LIBEVENT_THREAD*)arg)->thread_id, &attr, func, arg)) != 0) {
         fprintf(stderr, "Can't create thread: %s\n",
                 strerror(ret));
@@ -308,23 +326,29 @@ void accept_new_conns(const bool do_accept) {
 /*
  * Set up a thread's information.
  */
+/******************************************************************
+  * 函数功能:  每个独立的线程都有自己独立的event_base
+  ******************************************************************/
 static void setup_thread(LIBEVENT_THREAD *me) {
-    me->base = event_init();
+    me->base = event_init();  // 初始化
     if (! me->base) {
         fprintf(stderr, "Can't allocate event base\n");
         exit(1);
     }
 
     /* Listen for notifications from other threads */
+	// 当pipe 中写入事件的时候，libevent 就回调thread_libevent_process 方法
     event_set(&me->notify_event, me->notify_receive_fd,
               EV_READ | EV_PERSIST, thread_libevent_process, me);
-    event_base_set(me->base, &me->notify_event);
+    event_base_set(me->base, &me->notify_event); // 关联
 
+	// 添加事件操作
     if (event_add(&me->notify_event, 0) == -1) {
         fprintf(stderr, "Can't monitor libevent notify pipe\n");
         exit(1);
     }
 
+	// 初始化一个工作队列
     me->new_conn_queue = malloc(sizeof(struct conn_queue));
     if (me->new_conn_queue == NULL) {
         perror("Failed to allocate memory for connection queue");
@@ -332,6 +356,7 @@ static void setup_thread(LIBEVENT_THREAD *me) {
     }
     cq_init(me->new_conn_queue);
 
+	// 初始化互斥锁
     if (pthread_mutex_init(&me->stats.mutex, NULL) != 0) {
         perror("Failed to initialize mutex");
         exit(EXIT_FAILURE);
@@ -343,13 +368,6 @@ static void setup_thread(LIBEVENT_THREAD *me) {
         fprintf(stderr, "Failed to create suffix cache\n");
         exit(EXIT_FAILURE);
     }
-#ifdef EXTSTORE
-    me->io_cache = cache_create("io", sizeof(io_wrap), sizeof(char*), NULL, NULL);
-    if (me->io_cache == NULL) {
-        fprintf(stderr, "Failed to create IO object cache\n");
-        exit(EXIT_FAILURE);
-    }
-#endif
 }
 
 /*
@@ -373,6 +391,8 @@ static void *worker_libevent(void *arg) {
 
     register_thread_initialized();
 
+	// 开启事件的循环，每个线程都有独立的even_base 和事件循环机制
+	// 参数为0，则只有事件进来的时候才会调用一次事件的回调函数
     event_base_loop(me->base, 0);
     return NULL;
 }
@@ -382,6 +402,9 @@ static void *worker_libevent(void *arg) {
  * Processes an incoming "handle a new connection" item. This is called when
  * input arrives on the libevent wakeup pipe.
  */
+/******************************************************************
+  * 函数功能:  worker 线程的管道可读事件回调函数
+******************************************************************/
 static void thread_libevent_process(int fd, short which, void *arg) {
     LIBEVENT_THREAD *me = arg;
     CQ_ITEM *item;
@@ -389,7 +412,9 @@ static void thread_libevent_process(int fd, short which, void *arg) {
     conn *c;
     unsigned int timeout_fd;
 
-    if (read(fd, buf, 1) != 1) {
+	// 主线程中如果有新的连接，会向其中一个线程的pipe 写入1个字节
+	// 这里读取pipe 中的数据
+    if (read(fd, buf, 1) != 1) { // 若成功，返回读到的字节数
         if (settings.verbose > 0)
             fprintf(stderr, "Can't read from libevent pipe\n");
         return;
@@ -397,13 +422,14 @@ static void thread_libevent_process(int fd, short which, void *arg) {
 
     switch (buf[0]) {
     case 'c':
+		// 从工作线程的队列中获取一个CQ_ITEM 连接信息
         item = cq_pop(me->new_conn_queue);
 
         if (NULL == item) {
             break;
         }
         switch (item->mode) {
-            case queue_new_conn:
+            case queue_new_conn:     // 接受新的连接
                 c = conn_new(item->sfd, item->init_state, item->event_flags,
                                    item->read_buffer_size, item->transport,
                                    me->base);
@@ -423,7 +449,7 @@ static void thread_libevent_process(int fd, short which, void *arg) {
                 }
                 break;
 
-            case queue_redispatch:
+            case queue_redispatch: // 新的数据
                 conn_worker_readd(item->c);
                 break;
         }
@@ -448,6 +474,10 @@ static void thread_libevent_process(int fd, short which, void *arg) {
 /* Which thread we assigned a connection to most recently. */
 static int last_thread = -1;
 
+
+/******************************************************************
+  * 函数功能:  求余选择某一个工作线程
+  ******************************************************************/
 /*
  * Dispatches a new connection to another thread. This is only ever called
  * from the main thread, either during initialization (for UDP) or because
@@ -464,6 +494,7 @@ void dispatch_conn_new(int sfd, enum conn_states init_state, int event_flags,
         return ;
     }
 
+	// 求余法
     int tid = (last_thread + 1) % settings.num_threads;
 
     LIBEVENT_THREAD *thread = threads + tid;
@@ -477,11 +508,12 @@ void dispatch_conn_new(int sfd, enum conn_states init_state, int event_flags,
     item->transport = transport;
     item->mode = queue_new_conn;
 
+	// 把这个item 放到选定的worker 线程的CQ 队列中
     cq_push(thread->new_conn_queue, item);
 
     MEMCACHED_CONN_DISPATCH(sfd, thread->thread_id);
     buf[0] = 'c';
-    if (write(thread->notify_send_fd, buf, 1) != 1) {
+    if (write(thread->notify_send_fd, buf, 1) != 1) {  // 通知worker 线程，有新客户端连接到来
         perror("Writing to thread notify pipe");
     }
 }
@@ -657,9 +689,6 @@ void threadlocal_stats_reset(void) {
         pthread_mutex_lock(&threads[ii].stats.mutex);
 #define X(name) threads[ii].stats.name = 0;
         THREAD_STATS_FIELDS
-#ifdef EXTSTORE
-        EXTSTORE_THREAD_STATS_FIELDS
-#endif
 #undef X
 
         memset(&threads[ii].stats.slab_stats, 0,
@@ -682,9 +711,6 @@ void threadlocal_stats_aggregate(struct thread_stats *stats) {
         pthread_mutex_lock(&threads[ii].stats.mutex);
 #define X(name) stats->name += threads[ii].stats.name;
         THREAD_STATS_FIELDS
-#ifdef EXTSTORE
-        EXTSTORE_THREAD_STATS_FIELDS
-#endif
 #undef X
 
         for (sid = 0; sid < MAX_NUMBER_OF_SLAB_CLASSES; sid++) {
@@ -722,18 +748,22 @@ void slab_stats_aggregate(struct thread_stats *stats, struct slab_stats *out) {
  *
  * nthreads  Number of worker event handler threads to spawn
  */
+/******************************************************************
+  * 函数功能:  线程初始化
+  ******************************************************************/
 void memcached_thread_init(int nthreads, void *arg) {
     int         i;
     int         power;
 
     for (i = 0; i < POWER_LARGEST; i++) {
-        pthread_mutex_init(&lru_locks[i], NULL);
+        pthread_mutex_init(&lru_locks[i], NULL); 
     }
     pthread_mutex_init(&worker_hang_lock, NULL);
 
     pthread_mutex_init(&init_lock, NULL);
     pthread_cond_init(&init_cond, NULL);
 
+	// 申请一个CQ_ITEM 时需要加锁
     pthread_mutex_init(&cqi_freelist_lock, NULL);
     cqi_freelist = NULL;
 
@@ -772,30 +802,33 @@ void memcached_thread_init(int nthreads, void *arg) {
         pthread_mutex_init(&item_locks[i], NULL);
     }
 
+	// 申请nthreads 个元素的LIBEVENT_THREAD 数组
     threads = calloc(nthreads, sizeof(LIBEVENT_THREAD));
     if (! threads) {
         perror("Can't allocate thread descriptors");
         exit(1);
     }
 
+	// 创建nthreads 个工作线程
     for (i = 0; i < nthreads; i++) {
         int fds[2];
+		// 创建管道pipe，用于主线程和工作线程通信
         if (pipe(fds)) {
             perror("Can't create notify pipe");
             exit(1);
         }
 
-        threads[i].notify_receive_fd = fds[0];
-        threads[i].notify_send_fd = fds[1];
-#ifdef EXTSTORE
-        threads[i].storage = arg;
-#endif
+        threads[i].notify_receive_fd = fds[0]; // 接收端(读端)
+        threads[i].notify_send_fd = fds[1];    // 发送端(写端)
+
+		// 创建每个线程自己的libevent
         setup_thread(&threads[i]);
         /* Reserve three fds for the libevent base, and two for the pipe */
         stats_state.reserved_fds += 5;
     }
 
     /* Create threads after we've done all the libevent setup. */
+	// 真正创建工作线程，回调函数
     for (i = 0; i < nthreads; i++) {
         create_worker(worker_libevent, &threads[i]);
     }
