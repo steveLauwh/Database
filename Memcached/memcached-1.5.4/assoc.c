@@ -10,7 +10,7 @@
  *
  * The rest of the file is licensed under the BSD license.  See LICENSE.
  */
-
+// 实现Hash table 的操作
 #include "memcached.h"
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <pthread.h>
 
+// 静态初始化
 static pthread_cond_t maintenance_cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t maintenance_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t hash_items_counter_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -33,11 +34,12 @@ typedef  unsigned long  int  ub4;   /* unsigned 4-byte quantities */
 typedef  unsigned       char ub1;   /* unsigned 1-byte quantities */
 
 /* how many powers of 2's worth of buckets we use */
-unsigned int hashpower = HASHPOWER_DEFAULT;
+unsigned int hashpower = HASHPOWER_DEFAULT; // 默认幂为16
 
-#define hashsize(n) ((ub4)1<<(n))
+#define hashsize(n) ((ub4)1<<(n)) // 左移动n 位
 #define hashmask(n) (hashsize(n)-1)
 
+// 哈希表扩充
 /* Main hash table. This is where we look except during expansion. */
 static item** primary_hashtable = 0;
 
@@ -60,21 +62,25 @@ static bool started_expanding = false;
  */
 static unsigned int expand_bucket = 0;
 
+// 初始化Hash table，哈希表的长度
 void assoc_init(const int hashtable_init) {
     if (hashtable_init) {
         hashpower = hashtable_init;
     }
+	// 申请哈希表空间
     primary_hashtable = calloc(hashsize(hashpower), sizeof(void *));
     if (! primary_hashtable) {
         fprintf(stderr, "Failed to init hashtable.\n");
         exit(EXIT_FAILURE);
     }
+	// 统计
     STATS_LOCK();
     stats_state.hash_power_level = hashpower;
     stats_state.hash_bytes = hashsize(hashpower) * sizeof(void *);
     STATS_UNLOCK();
 }
 
+// 查找item
 item *assoc_find(const char *key, const size_t nkey, const uint32_t hv) {
     item *it;
     unsigned int oldbucket;
@@ -89,6 +95,7 @@ item *assoc_find(const char *key, const size_t nkey, const uint32_t hv) {
 
     item *ret = NULL;
     int depth = 0;
+	// 拉链法，一一比较
     while (it) {
         if ((nkey == it->nkey) && (memcmp(key, ITEM_key(it), nkey) == 0)) {
             ret = it;
