@@ -7,3 +7,5 @@
 * [Memcached 内存分配-slab, chunk 和 item 三者关系](https://github.com/steveLauwh/Database/blob/master/Memcached/The%20Annotated%20Memcached%20Sources/Memcached%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D-slab,%20chunk%20%E5%92%8C%20item%20%E4%B8%89%E8%80%85%E5%85%B3%E7%B3%BB.md)
 
 * [Memcached 主函数 main 流程](https://github.com/steveLauwh/Database/blob/master/Memcached/The%20Annotated%20Memcached%20Sources/Memcached%20%E4%B8%BB%E5%87%BD%E6%95%B0%20main%20%E6%B5%81%E7%A8%8B.md)
+
+* [Memcached-slabs 内存分配](https://github.com/steveLauwh/Database/blob/master/Memcached/The%20Annotated%20Memcached%20Sources/Memcached-slabs%20%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D.md)
