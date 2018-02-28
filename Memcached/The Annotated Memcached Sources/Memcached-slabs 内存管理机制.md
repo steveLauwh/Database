@@ -1,4 +1,4 @@
-# Memcached-slabs 内存分配
+# Memcached-slabs 内存管理机制
 
 [slabs.c 注解](https://github.com/steveLauwh/Database/blob/master/Memcached/memcached-1.5.4/slabs.c)
 
@@ -49,7 +49,7 @@ chunk 的增加因子由 -f 指定，默认为 1.25。
 
 删除的 item 并不是真正删除，而是使用链表连接空闲的 item。
 
-## 问题：Memcached 内存分配的操作？
+## 问题：Memcached 内存管理的操作？
 
 **1. 向内存池申请内存**
 
